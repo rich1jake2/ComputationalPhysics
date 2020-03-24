@@ -1,2 +1,2 @@
 # ComputationalPhysics
-Homework assignments and Independents activities related to computational physics
+Homework assignments and Independent activities related to computational physics
