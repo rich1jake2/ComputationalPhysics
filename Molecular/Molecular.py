@@ -24,8 +24,8 @@ rvec = np.transpose(rvec)
 
 radius = .5                                                             # Radius of all particles 
 
-
-timestep = 1/(200)                                                         # Timestep to update positions
+ccount = np.zeros([Nparticles])
+timestep = 1/(1)                                                         # Timestep to update positions
 
 fig = plt.figure()
 ax = plt.axes(xlim = (0,100), ylim = (0,100))
@@ -82,7 +82,10 @@ def Molecule_function(frame_number):
     radius = .5
 
     for i in range(Nparticles):
-        
+        if infections[i] == 'r':
+            ccount[i] += 1
+            if ccount[i] > 500:
+                infections[i] = 'k'
     
         x = rvec[i][0]
         y = rvec[i][1]
@@ -92,12 +95,12 @@ def Molecule_function(frame_number):
         rtest1 = [x,y,vx,vy] # Test positions- should not affect actual cacluations - input for update velocities
         
         # Testing Collision with Boundary 
-        if (y < 0 + error +.5 and y > 0 - error -.5) or (y < 100 + error + .5 and y > 100 - error - .5):
+        if (y < 0 ) or (y > 100 ):
             rvec[i][0] +=  vx*hstep
             rvec[i][1] += - vy*2*hstep
             rvec[i][2] =  vx
             rvec[i][3] = - vy
-        if (x < 0 + error +.5 and x > 0 - error - .5) or (x < 100 + error + .5 and x > 100 - error - .5):
+        if (x < 0 ) or (x > 100 ):
             rvec[i][0] +=  - vx*2*hstep
             rvec[i][1] +=   vy*2*hstep
             
@@ -142,23 +145,21 @@ def Molecule_function(frame_number):
                 if infections[j] == 'r':
                     infections[i] = 'r'
 
-                scatts.set_offsets(rvec[:,0:2])
-                scatts.set_color(infections)
+                
                 
 
             else:
-                scatts.set_offsets(rvec[:,0:2])
-                scatts.set_color(infections)
+                
                 continue 
             
-            scatts.set_offsets(rvec[:,0:2])
-            scatts.set_color(infections)
-            return scatts,
+    scatts.set_offsets(rvec[:,0:2])
+    scatts.set_color(infections)
+    return scatts,
 
 
 
 
-Animation = animation.FuncAnimation(fig, Molecule_function, interval = 200, blit = False, )
+Animation = animation.FuncAnimation(fig, Molecule_function, interval = 5, blit = True, )
 
 plt.show()
 

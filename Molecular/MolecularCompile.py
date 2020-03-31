@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 
 
 
-Nparticles = 5                                   
+Nparticles = 25                                   
 
 # Random Initial Positions 
 xiniti = np.random.uniform(low = 1, high = 99.5, size = Nparticles)   # Initial x positions
@@ -25,7 +25,7 @@ rvec = np.transpose(rvec)
 radius = .5                                                             # Radius of all particles 
 
 
-timestep = .01                                                         # Timestep to update positions
+timestep = 1.25                                                         # Timestep to update positions
 
 fig = plt.figure()
 ax = plt.axes(xlim = (0,100), ylim = (0,100))
@@ -33,12 +33,12 @@ ax = plt.axes(xlim = (0,100), ylim = (0,100))
 # Functions to Update positions and velocities
 
 def Update_Positions(rarray,timestep):
-
+    vmag = np.sqrt(np.square(rarray[2]) + np.square(rarray[3]))
     xposes = rarray[0] 
-    xposes += rarray[2]*timestep
+    xposes += (rarray[2]/vmag)*timestep
     
     yposes = rarray[1] 
-    yposes += rarray[3]*timestep
+    yposes += (rarray[3]/vmag)*timestep
     return np.array([xposes, yposes], dtype = float)
     
 
@@ -80,32 +80,37 @@ hstep = timestep
 error = .5
 radius = .5
 ims = []
-for it in range(10000):
+ccount = np.zeros([Nparticles])
+for it in range(1000):
 
     
 
     for i in range(Nparticles):
         
-    
+        if infections[i] == 'r':
+            ccount[i] += 1
+            if ccount[i] > 500:
+                infections[i] = 'k'
         x = rvec[i][0]
         y = rvec[i][1]
         vx = rvec[i][2]
         vy = rvec[i][3]
 
         rtest1 = [x,y,vx,vy] # Test positions- should not affect actual cacluations - input for update velocities
-        
+        vmag = np.sqrt(np.square(vx) + np.square(vy))
         # Testing Collision with Boundary 
-        if (y < 0 + error +.5 and y > 0 - error -.5) or (y < 100 + error + .5 and y > 100 - error - .5):
+        if (y < 0 + error +.75 and y > 0 - error -.75) or (y < 100 + error + .75 and y > 100 - error - .75):
             rvec[i][0] +=  vx*hstep
             rvec[i][1] += - vy*2*hstep
-            rvec[i][2] =  vx
-            rvec[i][3] = - vy
-        if (x < 0 + error +.5 and x > 0 - error - .5) or (x < 100 + error + .5 and x > 100 - error - .5):
+            
+            rvec[i][2] =  vx/vmag
+            rvec[i][3] = - vy/vmag
+        if (x < 0 + error +.75 and x > 0 - error - .75) or (x < 100 + error + .75 and x > 100 - error - .75):
             rvec[i][0] +=  - vx*2*hstep
             rvec[i][1] +=   vy*2*hstep
             
-            rvec[i][2] = -vx
-            rvec[i][3] = vy
+            rvec[i][2] = -vx/vmag
+            rvec[i][3] = vy/vmag
         else:
             # Updating Individual Position
             rvec[i][0] += vx*hstep 
@@ -126,7 +131,7 @@ for it in range(10000):
             separation = np.sqrt(np.square(x2 - x) + np.square(y2 - y))
 
             # Loop for Collisions between particles 
-            if (separation < 2*radius + error + .25) and (separation > 2*radius - error -.25):
+            if (separation < 2*radius + error + .5) and (separation > 2*radius - error -.5):
                 v1, v2 = Update_Velocities(rtest1,rtest2,hstep)
                 
                 vx,vy = rvec[i][2],rvec[i][3] = v1[0], v1[1] # this is to update rarray - so we can update the positions of both particles at once
@@ -153,8 +158,8 @@ for it in range(10000):
                 
 
                 continue
-        scatts = ax.scatter(rvec[:,0], rvec[:,1], color = infections)
-        ims.append([scatts])
+    scatts = ax.scatter(rvec[:,0], rvec[:,1], color = infections)
+    ims.append([scatts])
         
         
             
@@ -163,6 +168,6 @@ for it in range(10000):
             
 
 
-Animation = animation.ArtistAnimation(fig, ims, interval = 5, blit = True )
+Animation = animation.ArtistAnimation(fig, ims, interval = 10, blit = True )
 
 plt.show()
