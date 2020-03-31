@@ -1,4 +1,5 @@
-# Function will animate - will not register collisions 
+# Function will animate with collisions - no infectious portion yet 
+# Rather slow 
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ rvec = np.transpose(rvec)
 radius = .5                                                             # Radius of all particles 
 
 
-timestep = .05                                                         # Timestep to update positions
+timestep = .15                                                         # Timestep to update positions
 
 fig = plt.figure()
 ax = plt.axes(xlim = (0,100), ylim = (0,100))
@@ -47,7 +48,7 @@ def Update_Positions(rarray,timestep):
 def Update_Velocities(r1,r2,h):                                             
    
     # Finding the slope to update the velocity to 
-    slope = (r2[1] - r1[1])/(r2[0] - r1[0])
+    # slope = (r2[1] - r1[1])/(r2[0] - r1[0])
 
     a_x = r2[0] - r1[0] # This should be acceleration vector - x direction (From slope)
     a_y = r2[1] - r1[1] # This should be acceleration vector - y direction (From Slope)
@@ -78,7 +79,7 @@ def Update_Velocities(r1,r2,h):
 def Molecule_function(frame_number):
     
     hstep = timestep
-    error = .05
+    error = .5
     radius = .5
 
     for i in range(Nparticles):
@@ -90,10 +91,23 @@ def Molecule_function(frame_number):
         vy = rvec[i][3]
 
         rtest1 = [x,y,vx,vy] # Test positions- should not affect actual cacluations - input for update velocities
-
-        # Updating Positions
-        rvec[i][0] += vx*hstep 
-        rvec[i][1] += vy*hstep
+        if (y < 0 + error +.5 and y > 0 - error -.5) or (y < 100 + error + .5 and y > 100 - error - .5):
+            rvec[i][0] +=  vx*hstep
+            rvec[i][1] += - vy*2*hstep
+            rvec[i][2] =  vx
+            rvec[i][3] = - vy
+        if (x < 0 + error +.5 and x > 0 - error - .5) or (x < 100 + error + .5 and x > 100 - error - .5):
+            rvec[i][0] +=  - vx*2*hstep
+            rvec[i][1] +=   vy*2*hstep
+            
+            rvec[i][2] = -vx
+            rvec[i][3] = vy
+        else:
+            # Updating Individual Position
+            rvec[i][0] += vx*hstep 
+            rvec[i][1] += vy*hstep
+        
+        
         # Then Checking for collisions
         for j in range(Nparticles):
             if i == j:
@@ -105,10 +119,10 @@ def Molecule_function(frame_number):
             
             rtest2 = [x2,y2,vx2,vy2] # Test positions 2- should not affect actual cacluations - input for update velocities
             
-            separation = np.sqrt((x2 - x)**2 + (y2 - y)**2)
+            separation = np.sqrt(np.square(x2 - x) + np.square(y2 - y))
 
             # Loop for Collisions between particles 
-            if (separation < 2*radius + error) and (separation > 2*radius - error):
+            if (separation < 2*radius + error + .25) and (separation > 2*radius - error -.25):
                 v1, v2 = Update_Velocities(rtest1,rtest2,hstep)
                 
                 vx,vy = rvec[i][2],rvec[i][3] = v1[0], v1[1] # this is to update rarray - so we can update the positions of both particles at once
@@ -121,13 +135,16 @@ def Molecule_function(frame_number):
 
                 rvec[i][0], rvec[i][1] = xupdated, yupdated
                 rvec[j][0], rvec[j][1] = x2updated,y2updated
+                
                 scatts.set_offsets(rvec[:,0:2])
-                return scatts,
+                
+
             else:
                 scatts.set_offsets(rvec[:,0:2])
-                break
+                continue 
+            
             scatts.set_offsets(rvec[:,0:2])
-            return scatts
+            return scatts,
 
 
 
