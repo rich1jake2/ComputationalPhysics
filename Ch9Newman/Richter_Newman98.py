@@ -62,7 +62,7 @@ kappa = 5e10 # inverse meters
 
 
 
-h = 1e-18 # Time steps/Slices 
+h = 1e-19 # Time steps/Slices 
 hbar = 6.62e-34
 m = 9.109e-31 
 
@@ -82,7 +82,7 @@ A[1,:] = a1
 
 
 
-times = np.arange(0,1e-15,h)
+times = np.arange(0,1e-16,h)
 
 
 
