@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 plt.rcParams['animation.ffmpeg_path'] ='C:\\Users\\jakri\\Programs\\Python\\Python38\\Lib\\site-packages\\ffmpeg\\ffmpeg-20200403-52523b6-win64-static\\bin\\ffmpeg.exe'
 
-Nparticles = 100                                   
+
+# Initializing a global list of initial values for the system of particles we have_______________________
+np.random.seed(223497)
+Nparticles = 75                                   
 
 # Random Initial Positions 
 xiniti = np.random.uniform(low = 1, high = 99.5, size = Nparticles)   # Initial x positions
@@ -11,8 +14,8 @@ yiniti = np.random.uniform(low = 1, high = 99.3, size = Nparticles)  # Initial y
 
 
 # Random Initial Velocities - Scaled to 1 
-vmax = 1.0                                                              # Maximum velocity - in this case THE velcoity
-vxin = np.random.uniform(size = Nparticles, low = -(vmax-.05), high = vmax - .05  )    # Intial vx velocities
+vmax = 1.0                                                      # Maximum velocity - in this case THE velcoity
+vxin = np.random.uniform(size = Nparticles, low = -(vmax-.05e-1), high = vmax - .05e-1  )    # Intial vx velocities
 vyin = np.sqrt(vmax**2 - np.square(vxin))                                  # initial vy velocities
 vtotali = np.sqrt(np.square(vyin) + np.square(vxin))                    # total Vi - should be 1 in this case
 
@@ -24,13 +27,17 @@ rvec = np.transpose(rvec)
 radius = .5                                                             # Radius of all particles 
 
 
-timestep = .005                                                         # Timestep to update positions
-TotalTimesteps  = 400
+timestep = 5e-3                                                         # Timestep to update positions
+TotalTimesteps  = 1500 # total number of timesteps to iterate through
 
+#####_______________________________________________________________________________________________________
+
+
+# Velocities and velocity titles for the bar graph
 VelList = [0,1,2,3,4]
 VelLabels = [0.0, 1.0, 2.0, 3.0, 4.0]
 
-
+# Initializng the figure and its subplot - look to matplotlib documentation to understand add_gridspec 
 fig = plt.figure()
 gs = fig.add_gridspec(5, 4)
 
@@ -39,180 +46,170 @@ ax.set_xlim([0,100])
 ax.set_ylim([0,100])
 ax2 = fig.add_subplot(gs[0,:])
 
-# bPlt  = ax2.bar(VelLabels, VelList)
 
 
 
+# Uesful Functions fo Calculations ----------------
 
-# ax2 = fig.add_subplot(2,3,2)
 
-# scatts = ax.scatter(rvec[:,0],rvec[:,1], color = infections)
-# Functions to Update positions and velocities
-
-def Update_Positions(rarray,timestep):
-    xposes = rarray[0] 
-    xposes += (rarray[2])*timestep
-    
-    yposes = rarray[1] 
-    yposes += (rarray[3])*timestep
-    return np.array([xposes, yposes], dtype = float)
+# The Lennared Jones 6-12 formula 
 
 def V(r):
     return 4 * ((1/r)**12 - (1/r)**6)
+# Force that the particles exert on each other 
 def Force(r):
-    return 24 * (2*(5e-9/r)**13 - (5e-9/r)**7)
+    return 24 * (2*(1/r)**13 - (1/r)**7)
 
-
-def Verlet_Velocities(r1,r2,h):                                             
-   
-    
-    
-
-    # Returning the proper values of V1 and V2 
-    return np.array([vx1,vy1], dtype = float), np.array([vx2,vy2], dtype = float)
-
+# Function to update the bar plot heights individually as needed for the velocity distribution
 def BarUpdate(barPlots, DesiredHeights):
     for i, plot in enumerate(barPlots):
         plot.set_height(DesiredHeights[i])
     return barPlots
 
+#########-------------------------------------------
 
-# Function to update all the positions - check for collisions and stuff
 
-    
+# Timestep initialization to the one above - except applying to global variable h-step -----
+
 hstep = timestep
-error = .5
-radius = .5
-ims = []
-im2 = []
-ts = []
+#-------------------------------------------------------------------------------------------
+
+
+# Useful lists for animations #-----------------------------------------
+
+ims = [] # list to append images/artists to for animation 
+im2 = [] #
+ts = []  # empty list of times that will be useful for animation purposes 
+#------------------------------------------------------------------------
 
 
 
 
 
+# This nested for loop will Initialize the half step for Verlet ------------------------------
 
-# Initialize the half step for Verlet - 
-vhalf = np.empty([Nparticles,2], dtype = float) # Half step with 2 columns - for each vel direction
+# Initializing the vhalf vector that will be updated later in the verlet integration 
+vhalf = np.zeros([Nparticles,2], dtype = float ) 
 
 for i in range(Nparticles ):
-    for j in range(Nparticles):
-        if i == j:
-            continue
-        else:
-            # Because this Double counts the force we want to divide by 2 at the end  
+    for j in range(i+1, Nparticles):
+        
+            
 
-            sepxi = rvec[i][0] - rvec[j][0]
-            sepyi = rvec[i][1] - rvec[j][1]
-            vhalf[i][0] = rvec[i,2] + Force(sepxi)
-            vhalf[i][1] = rvec[i,3] + Force(sepyi)
+        sepxi = rvec[i][0] - rvec[j][0]
+        sepyi = rvec[i][1] - rvec[j][1]
 
+        disti = np.sqrt(sepxi**2 + sepyi**2)
 
-# Initializing kp vector to update velocities in nested for loop
+        # Assigning the initial 1/2 step velocity Values in the x direction
+        vhalf[i][0] = rvec[i,2] + Force(disti)* (sepxi/disti)
+        vhalf[j][0] = rvec[j,2] - Force(disti)* (sepxi/disti)
+        
+        # Now in doing the same thing above in the y direction
+        vhalf[i][1] = rvec[i,3] + Force(disti)* (sepyi/disti)
+        vhalf[j][1] = rvec[j, 3] - Force(disti)* (sepyi/disti)
 
-kp = np.empty(2, dtype = float)
+#---------------------------------------------------------------------------------------------
+# Initializing kp vector to update velocities in nested for loop-----------------------------
+
+kp = np.empty([Nparticles, 2], dtype = float)
 kp2 = np.empty(2, dtype = float)
+#----------------------------------------------------------------------------------------------
 
-# Creating the Proper Frames 
+# For loop to iterate through each frame. It changes the value of the artists 'scatts' then appends to a list to be animated ---
 for it in range(TotalTimesteps):
+    # Creating bin counter to know how many particles are moving in a specific range of velocities ----------
     cV0 = 0.0 
     cV1 = 0.0 
     cV2 = 0.0
     cV3 = 0.0 
     cV4 = 0.0 
-    
 
+    # Initalizing the kp values to 0 on each iteration so I do  not overcount the force from the last iteration
+    kp = np.zeros([Nparticles,2], dtype = float )
+    #---------------------------------------------------------------------------------------------------------#
+
+    
+    # For loops to iterate through each particle and update their position -----------------------------------
     for i in range(Nparticles):
         
         
         
-
+        # Creating a temprary array of values to test the separations between particles ----------------------#
         x = rvec[i][0]
         y = rvec[i][1]
         vx = rvec[i][2]
         vy = rvec[i][3]
 
-        rtest1 = [x,y,vx,vy] # Test positions- should not affect actual cacluations - input for update velocities
-        
+        rtest1 = [x,y,vx,vy] 
+        #-----------------------------------------------------------------------------------------------------#
         
 
 
-       # Testing Collision with Boundary - Reflective Boundaries for testing 
+       # Testing Boundary - Periodic Boundary ----------------------------------------------------------------#
+       
+        # First in the y direction - 
         if (y < 0 ) :
             rvec[i][1] += 100 
 
         if (y > 100 ):
-            rvec[i][1] -= 100 
+            rvec[i][1] -= 100
 
-            
+        # Then in the x direction
         if (x < 0 ): 
             rvec[i][0] += 100
         if (x > 100 ):
             rvec[i][0] -= 100
+        #------------------------------------------------------------------------------------------------------#
             
-            
         
         
         
         
         
-        # Then Checking for Interactions
-        for j in range(Nparticles):
-            if i == j:
-                continue
-            
+        # Calculating the lennard Jones Force interactions between the particle of rvec[i] and rvec[j]--------
+        for j in range(i+1,Nparticles):
+            # Creating the temporary array for the second particle to test the separation and force---- 
             x2  = rvec[j][0]
             y2  = rvec[j][1]
             vx2 = rvec[j][2]
             vy2 = rvec[j][3]
             
-            rtest2 = [x2,y2,vx2,vy2] # Test positions 2- should not affect actual cacluations - input for update velocities
-            
+            rtest2 = [x2,y2,vx2,vy2] 
+            # -------------------------------------------------------------------------------------------
+
+            # Calculating the Separations in either direction---------
             sepx = x - x2
             sepy = y - y2 
+            dist = np.sqrt(sepx**2 + sepy**2)
+            if dist < .90:
+                dist = .90 
+            # --------------------------------------------------------
             
-            # Continuing Verlet Integration 
-            rvec[i,0:2] += timestep*vhalf[i,:]
+            # Continuing Verlet Integration with half-time step calculations --------------------------
             
-            kp[0] = timestep* .5 *Force(sepx) # K along x - 
-            kp[1] = timestep* .5 *Force(sepy) # k values along y 
+            #using formulas from Newman chapter 8 pg 373
+            rvec[i, 0:2] += timestep * vhalf[i,:]
+            rvec[j, 0:2] += timestep * vhalf[j,:]
+            
+            kp[i,0] = timestep *Force(dist) * (sepx/dist)
+            kp[i,1] = timestep *Force(dist) * (sepy/dist)
+            
+            
+            kp[j,0] = (- kp[i,0])
+            kp[j,1] = (- kp[i,1])
 
             
 
-            rvec[i,2:4] += vhalf[i,:] + .5 * kp
-             
-            
-            vhalf[i,:] += kp 
-            
-
-
+            rvec[i, 2:4] += (vhalf[i,:] + .5 * kp[i])
+            rvec[j, 2:4] += (vhalf[j,:] + .5 * kp[j])
             
             
             
-    
-    # Getting the Number of Particles in different velocities
-    for ki,vel in enumerate(rvec[:,2]):
-        mag = np.sqrt(vel**2 + (rvec[ki][3])**2 )
-        if mag < VelLabels[0] + 1 :
-            cV0 += 1 
-        elif VelLabels[0] + 1 <= mag and mag < VelLabels[1] + 1.0:
-            cV1 += 1
-        elif VelLabels[1] + 1 <= mag and mag < VelLabels[2] + 1.0:
-            cV2 += 1
-        elif VelLabels[2] + 1 <= mag and mag < VelLabels[3] + 1.0:
-            cV3 += 1
-        elif mag >= VelLabels[4]:
-            cV4 += 1
-    VelList = [cV0, cV1, cV2, cV3, cV4] 
-    
         
-
-
-    
-    # Creating the plots to be iterated through in ArtistAnimation
-    totalTime = np.arange(0, it+1)
-
-    
+            vhalf[i,:] += kp[i] 
+            vhalf[j,:] += kp[j]
+            
     scatts = ax.scatter(rvec[:,0], rvec[:,1], color = 'b')
     
   
@@ -229,7 +226,7 @@ for it in range(TotalTimesteps):
         
             
             
-            
+# Basic Animation writer given by matplotlib --------------------------------------------
 FFwriter = animation.FFMpegWriter(fps = 1000/20)          
 
 
@@ -237,4 +234,6 @@ Animation = animation.ArtistAnimation(fig, ims, interval = 20, blit = True )
 
 Animation.save('PT2_MD_Test.mp4', writer = FFwriter)
 
+# ----------------------------------------------------------------------------------------
 
+### CODE DONE ####
