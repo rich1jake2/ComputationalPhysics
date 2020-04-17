@@ -30,7 +30,7 @@ radius = .5                                                             # Radius
 
 
 timestep = 5e-3                                                         # Timestep to update positions
-TotalTimesteps  = 750 # total number of timesteps to iterate through
+TotalTimesteps  = 500 # total number of timesteps to iterate through
 
 #####_______________________________________________________________________________________________________
 
@@ -47,39 +47,13 @@ ax = fig.add_subplot(gs[1:5,:])
 ax.set_xlim([0,100])
 ax.set_ylim([0,100])
 
-# Initializing  the Second subplot for the histogram 
-vmagi = np.sqrt(vxin**2 + vyin**2)
-vels, bins = np.histogram(vmagi, 10)
-
-left = bins[:-1]
-right = np.array(bins[1:])
-bottom = np.zeros(len(left))
-top = bottom + vels 
-nrects = len(left)
-nverts = nrects * (1 + 3 + 1)
 
 
-verts = np.zeros([nverts, 2])
-codes = np.ones(nverts, int) * path.Path.LINETO
-codes[0::5] = path.Path.MOVETO
-codes[4::5] = path.Path.CLOSEPOLY
-verts[0::5, 0] = left
-verts[0::5, 1] = bottom
-verts[1::5, 0] = left
-verts[1::5, 1] = top
-verts[2::5, 0] = right
-verts[2::5, 1] = top
-verts[3::5, 0] = right
-verts[3::5, 1] = bottom
 
 
-barpath = path.Path(verts, codes )
-patch = patches.PathPatch(barpath )
 
 ax2 = fig.add_subplot(gs[0,:])
-ax2.add_patch(patch)
-ax2.set_xlim(left[0], right[-1])
-ax2.set_ylim(bottom.min(), 20)
+
 
 
 
@@ -143,6 +117,9 @@ for i in range(Nparticles ):
 
 kp = np.empty([Nparticles, 2], dtype = float)
 kp2 = np.empty(2, dtype = float)
+
+Potential_Energy = np.zeros(Nparticles)
+EnergyList = []
 #----------------------------------------------------------------------------------------------
 
 # For loop to iterate through each frame. It changes the value of the artists 'scatts' then appends to a list to be animated ---
@@ -232,53 +209,36 @@ for it in range(TotalTimesteps):
 
             rvec[i, 2:4] = (vhalf[i,:] + .5 * kp[i])
             rvec[j, 2:4] = (vhalf[j,:] + .5 * kp[j])
-            
-            
-            
-        
+
             vhalf[i,:] += kp[i,:]
             vhalf[j,:] += kp[j,:]
+
+            Potential_Energy[i] = V(dist)
+            
     
+
+            
             
     scatts = ax.scatter(rvec[:,0], rvec[:,1], color = 'b')
     
   
-    
+    CurrentTime = np.arange(0,it+1)
 
+    
     
     velocity_mags = np.sqrt(rvec[:,2]**2 + rvec[:,3]**2)
+    Kinetic_Energy = .5 * velocity_mags**2 
+    TotalKinetic = np.sum(Kinetic_Energy)
+    TotalPotential = np.sum(Potential_Energy)
+
+    TotalE = TotalKinetic + TotalPotential
+    EnergyList.append(TotalE)
+
+    EnergyLine, = ax2.plot(CurrentTime, EnergyList, color = 'b'  )
+
     
     
-    vels, bins = np.histogram(velocity_mags, 25)
-    left = np.array(bins[:-1])
-    right = np.array(bins[1:])
-    bottom = np.zeros(len(left))
-    top = bottom + vels 
-    nrects = len(left)
-    nverts = nrects * (1 + 3 + 1)
 
-
-    verts = np.zeros((nverts, 2))
-    codes = np.ones(nverts, int) * path.Path.LINETO
-    codes[0::5] = path.Path.MOVETO
-    codes[4::5] = path.Path.CLOSEPOLY
-    verts[0::5, 0] = left
-    verts[0::5, 1] = bottom
-    verts[1::5, 0] = left
-    verts[1::5, 1] = top
-    verts[2::5, 0] = right
-    verts[2::5, 1] = top
-    verts[3::5, 0] = right
-    verts[3::5, 1] = bottom
-
-
-    barpath = path.Path(verts, codes )
-   
-    
-    patch = patches.PathPatch(barpath, facecolor = 'blue', alpha = .5 )
-    ax2.add_patch(patch)
-    ax2.set_xlim(left[0], right[-1])
-    ax2.set_ylim(bottom.min(), 20)
 
     
     
@@ -286,7 +246,7 @@ for it in range(TotalTimesteps):
     
 
 
-    ims.append([scatts, patch,])
+    ims.append([scatts, EnergyLine, ])
 
     
     
@@ -299,7 +259,7 @@ FFwriter = animation.FFMpegWriter(fps = 1000/20)
 
 Animation = animation.ArtistAnimation(fig, ims, interval = 20, blit = True )
 
-Animation.save('PT2_MD_Test.mp4', writer = FFwriter)
+Animation.save('PT2_MD_Test_EnergyPlot.mp4', writer = FFwriter)
 
 # ----------------------------------------------------------------------------------------
 
