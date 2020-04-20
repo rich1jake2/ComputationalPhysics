@@ -15,9 +15,11 @@ xiniti = np.array([0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4])
 yiniti = np.array([5,10,15,20,24,5,10,15,20,24,5,10,15,20,24,5,10,15,20,24,5,10,15,20,24])
 
 
+
+
 # Random Initial Velocities - Scaled to 1 
 vmax = 1.0                                                      # Maximum velocity - in this case THE velcoity
-vxin = np.random.uniform(size = Nparticles, low = -(vmax-.05e-1), high = vmax - .05e-1  )    # Intial vx velocities
+vxin = np.array([1,1,1,1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1] )   # Intial vx velocities
 vyin = np.sqrt(vmax**2 - np.square(vxin))                                  # initial vy velocities
 vtotali = np.sqrt(np.square(vyin) + np.square(vxin))                    # total Vi - should be 1 in this case
 
@@ -30,7 +32,7 @@ radius = .5                                                             # Radius
 
 
 timestep = 1e-3                                                         # Timestep to update positions
-TotalTimesteps  = 2000 # total number of timesteps to iterate through
+TotalTimesteps  = 400 # total number of timesteps to iterate through
 bound = 25
 #####_______________________________________________________________________________________________________
 
@@ -221,7 +223,7 @@ for it in range(TotalTimesteps):
             if sepx <-(bound/2):
                 sepx += bound
             if sepy > (bound/2):
-                sepy -= 100
+                sepy -= bound
             if sepy <-(bound/2):
                 sepy += bound
 
@@ -329,7 +331,7 @@ FFwriter = animation.FFMpegWriter(fps = 1000/20)
 
 Animation = animation.ArtistAnimation(fig, ims, interval = 20, blit = True )
 
-Animation.save('PT2A_RegularArray_MD.mp4', writer = FFwriter)
+Animation.save('P2b_MD.mp4', writer = FFwriter)
 
 # ----------------------------------------------------------------------------------------
 

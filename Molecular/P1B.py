@@ -13,9 +13,11 @@ yiniti = np.random.uniform(low = 1, high = 49.3, size = Nparticles)  # Initial y
 
 
 # Random Initial Velocities 
-vmax = 1.0                                                              # Maximum velocity - in this case THE velcoity
+vmax = 1.0                                                             # Maximum velocity - in this case THE velcoity
 vxin = np.random.uniform(size = Nparticles, low = -(vmax-.05), high = vmax - .05  )    # Intial vx velocities
-vyin = np.sqrt(vmax**2 - np.square(vxin))                                  # initial vy velocities
+vyin = np.sqrt(vmax**2 - np.square(vxin))  
+vxin[0:113] = 0.0 # initial vy velocities
+vyin[0:113] = 0.0 
 vtotali = np.sqrt(np.square(vyin) + np.square(vxin))                    # total Vi - should be 1 in this case
 
 infections = np.array(['b']*( Nparticles - 1) + ['r'] ) 
@@ -34,6 +36,8 @@ TotalTimesteps  = 1500
 fig = plt.figure()
 gs = fig.add_gridspec(5, 4)
 ax = fig.add_subplot(gs[1:5,:])
+ax.set_xlim(0,50)
+ax.set_ylim(0,50)
 ax2 = fig.add_subplot(gs[0,:])
 
 
@@ -45,12 +49,18 @@ ax2 = fig.add_subplot(gs[0,:])
 # Functions to Update positions and velocities
 
 def Update_Positions(rarray,timestep):
+
     vmag = np.sqrt(np.square(rarray[2]) + np.square(rarray[3]))
-    xposes = rarray[0] 
-    xposes += (rarray[2]/vmag)*timestep
+    if vmag == 0.0:
+        xposes = rarray[0] 
+        yposes = rarray[1]
+    else: 
+
+        xposes = rarray[0] 
+        xposes += (rarray[2]/vmag*timestep)
     
-    yposes = rarray[1] 
-    yposes += (rarray[3]/vmag)*timestep
+        yposes = rarray[1] 
+        yposes += rarray[3]/vmag*timestep
     return np.array([xposes, yposes], dtype = float)
 
 
@@ -138,6 +148,10 @@ def Update_Velocities(r1,r2,h):
 
     r2[2] *= vmax/vmag2
     r2[3] *= vmax/vmag2
+
+
+
+
 
     # Returning the proper values of V1 and V2 
     return np.array([r1[2],r1[3]], dtype = float), np.array([r2[2],r2[3]], dtype = float)
@@ -227,12 +241,14 @@ for it in range(TotalTimesteps):
             separation = np.sqrt(np.square(x2 - x) + np.square(y2 - y))
 
             # Loop for Collisions between particles 
-            if (separation < 2*radius + 1  ) :
+            if (separation < 2*radius + .25  ) :
                 v1, v2 = Update_Velocities(rtest1,rtest2,hstep)
                 
                 vx,vy = rvec[i][2],rvec[i][3] = v1[0], v1[1] # this is to update rarray - so we can update the positions of both particles at once
                 vx2,vy2 = rvec[j][2],rvec[j][3] = v2[0], v2[1] # Note - r[i][2] = vx , r[i][3] = vy
                 
+                rvec[0:112,2] = 0.0 
+                rvec[0:112,3] = 0.0 
                 xupdated,yupdated = Update_Positions(rvec[i,:],hstep)
                 x2updated, y2updated = Update_Positions(rvec[j,:],hstep)
 
@@ -297,6 +313,6 @@ FFwriter = animation.FFMpegWriter(fps = 1000/20)
 
 Animation = animation.ArtistAnimation(fig, ims, interval = 5, blit = True )
 
-Animation.save('P1A_MD.mp4', writer = FFwriter)
+Animation.save('P1B_MD.mp4', writer = FFwriter)
 
 

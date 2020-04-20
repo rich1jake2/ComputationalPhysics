@@ -11,8 +11,8 @@ np.random.seed(223497)
 Nparticles = 25                                   
 
 # Random Initial Positions 
-xiniti = np.array([0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4])
-yiniti = np.array([5,10,15,20,24,5,10,15,20,24,5,10,15,20,24,5,10,15,20,24,5,10,15,20,24])
+xiniti = np.random.uniform(low = 1, high = 49.5, size = Nparticles)   # Initial x positions
+yiniti = np.random.uniform(low = 1, high = 49.3, size = Nparticles)  # Initial y positions 
 
 
 # Random Initial Velocities - Scaled to 1 
@@ -30,8 +30,8 @@ radius = .5                                                             # Radius
 
 
 timestep = 1e-3                                                         # Timestep to update positions
-TotalTimesteps  = 2000 # total number of timesteps to iterate through
-bound = 25
+TotalTimesteps  = 2500 # total number of timesteps to iterate through
+bound = 50
 #####_______________________________________________________________________________________________________
 
 
@@ -221,7 +221,7 @@ for it in range(TotalTimesteps):
             if sepx <-(bound/2):
                 sepx += bound
             if sepy > (bound/2):
-                sepy -= 100
+                sepy -= bound
             if sepy <-(bound/2):
                 sepy += bound
 
@@ -254,7 +254,7 @@ for it in range(TotalTimesteps):
             vhalf[j,:] += kp[j,:]
     
             
-    scatts = ax.scatter(rvec[:,0], rvec[:,1], color = 'b', s = 1.2)
+    scatts = ax.scatter(rvec[:,0], rvec[:,1], color = 'b')
     
   
     
@@ -263,7 +263,7 @@ for it in range(TotalTimesteps):
     velocity_mags = np.sqrt(rvec[:,2]**2 + rvec[:,3]**2)
     
     
-    vels, bins = np.histogram(velocity_mags, 10)
+    vels, bins = np.histogram(velocity_mags, 5)
     left = np.array(bins[:-1])
     right = np.array(bins[1:])
     bottom = np.zeros(len(left))
@@ -329,7 +329,7 @@ FFwriter = animation.FFMpegWriter(fps = 1000/20)
 
 Animation = animation.ArtistAnimation(fig, ims, interval = 20, blit = True )
 
-Animation.save('PT2A_RegularArray_MD.mp4', writer = FFwriter)
+Animation.save('PT2A_RandomArray_MD.mp4', writer = FFwriter)
 
 # ----------------------------------------------------------------------------------------
 
