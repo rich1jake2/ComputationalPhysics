@@ -10,48 +10,52 @@ plt.rcParams['animation.ffmpeg_path'] ='C:\\Users\\jakri\\Programs\\Python\\Pyth
 
 
 # Initial Parameters 
-Nwalkers = 10
-Nsteps = 500
+Nwalkers = 100
+Nsteps = 70000
 x = np.zeros(Nwalkers)
 y = np.zeros(Nwalkers)
 r = np.array([x,y])
 r = r.T
 
 # For cell creation
-xmin = ymin = -100
-xmax = ymax = 100
-nx = 5
-ny = 5 
+xmin = ymin = - 200
+xmax = ymax = 200
+nx = 7
+ny = 7 
 Cells = np.zeros(nx*ny)
 # Intial Entropy 
 Sentropy = np.zeros(Nsteps)
 # Animation Set up 
 fig = plt.figure()
+
 ax = plt.axes(xlim = (xmin,xmax), ylim = (ymin,ymax))
 ScatterArtists = [] # Lists for Scatter Artists 
 
 
 
 
-
+# Main Walking Nested For loop
 for t in range(Nsteps):
     Cells = np.zeros(nx*ny)
     
     for walker in range(Nwalkers):
-        xrand = np.random.uniform(low = 0.0, high = 1.0, size = 1)
-        yrand = np.random.uniform(low = 0.0, high = 1.0, size = 1)
+        xrand = np.random.uniform(low = -1.0, high = 1.0, size = 1)
+        yrand = np.random.uniform(low = -1.0, high = 1.0, size = 1)
         
-        if xrand <= .45 :
+        
+        if xrand >= 0 :
             r[walker, 0] += 1.0 
+            
             
         else:
             r[walker,0] -= 1.0 
 
-
-        if yrand <= .45 :
+        
+        if yrand >= 0 :
             r[walker, 1] += 1.0
         else:
             r[walker, 1] -= 1.0
+        
 
         
         
@@ -74,11 +78,21 @@ for t in range(Nsteps):
         break  
     
     # Creating the Scatterplot artists every 2 time steps
-    if t%2 == 0:
-        scatter = ax.scatter(r[:,0],r[:,1], marker = 's', c = 'b')
-        annotatedEntropy = plt.annotate('Entropy = '+ str(np.around(Sentropy[t],5)), xy = (0, 0), xytext = (0,0))
-        ScatterArtists.append([scatter, annotatedEntropy] )
-FFwriter = animation.FFMpegWriter(fps = 10)
-WalkerAnimation2 = animation.ArtistAnimation(fig, ScatterArtists, interval = 50, blit = True )
+    
+    scatter = ax.scatter(r[:,0],r[:,1], marker = 's', c = 'b')
+    annotatedEntropy = plt.annotate('Entropy = '+ str(np.around(Sentropy[t],5)), xy = (0, 0), xytext = (0,0))
+    ScatterArtists.append([scatter, annotatedEntropy] )
 
-WalkerAnimation2.save('HW10_Problem4.mp4', writer = FFwriter)
+
+
+
+FFwriter = animation.FFMpegWriter(fps = 30)
+
+
+WalkerAnimation2 = animation.ArtistAnimation(fig, ScatterArtists, interval = 50, blit = True )
+plt.show()
+# WalkerAnimation2.save('HW10_Problem4.mp4', writer = FFwriter)
+
+plt.figure()
+plt.plot(np.arange(t),Sentropy[0:t])
+plt.show()
