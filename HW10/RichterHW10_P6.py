@@ -27,31 +27,15 @@ for t in range(Nsteps):
     
     
     for walker in range(Nwalkers):
-        xrand = np.random.uniform(low = -1.0, high = 1.0, size = 1)
-        yrand = np.random.uniform(low = -1.0, high = 1.0, size = 1)
-        zrand = np.random.uniform(low = -1.0, high = 1.0, size = 1)
+        xrand = np.random.uniform(low = -2.0, high = 2.0)
+        yrand = np.random.uniform(low = -2.0, high = 2.0)
+        zrand = np.random.uniform(low = -2.0, high = 2.0)
         
         
-        if xrand >= 0 :
-            dx = 1.0 
-            
-            
-        else:
-            dx = -1.0 
 
-        
-        if yrand >= 0 :
-            dy = 1.0
-        else:
-            dy = -1.0
-
-        if zrand >= 0 :
-            dz = 1.0
-        else:
-            dz = -1.0
         
         # Creating the Displacement vector 
-        displVec = np.array([dx, dy, dz], dtype = float)
+        displVec = np.array([xrand, yrand, zrand], dtype = float)
         # Normalizing it 
         displVec *= np.sum(np.square(displVec))
 

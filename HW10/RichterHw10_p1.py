@@ -14,14 +14,14 @@ import numpy as np
 import matplotlib.pyplot as plt 
 def ProbFunction(x):
     return 2*np.exp(-3*x)
-def Rejection(Npoints, DensityFunction):
+def Rejection(Npoints, DensityFunction, binNumber):
     i = 1 
     yl = []
 
     # Full Rejection method
     while i <= Npoints:
-        x = np.random.randn()
-        y = np.random.randn()
+        x = np.random.uniform(low = 0, high = 10 )
+        y = np.random.uniform(low = 0, high = 10 )
         # Rejecting the samples that don't meet the criteria
         if y <= DensityFunction(x):
             yl.append(y)
@@ -32,11 +32,14 @@ def Rejection(Npoints, DensityFunction):
     width = 0.5
     histmin = np.floor(min(yl))
     histmax = np.ceil(max(yl))+width
-    bins = np.arange(histmin,histmax,width)
+    bins = np.linspace(histmin,histmax,binNumber)
     histArtist = plt.hist(yl,bins=bins)
     return histArtist
 
 plt.figure()
-Rejection(1000, ProbFunction)
+Rejection(1000, ProbFunction, 10)
 plt.show()
 
+plt.figure()
+Rejection(1000000, ProbFunction, 100)
+plt.show()

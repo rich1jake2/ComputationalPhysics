@@ -1,8 +1,3 @@
-'''
-Calculating the Entropy from problem 10.3
-
-'''
-
 import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib.animation as animation
@@ -53,9 +48,40 @@ for t in range(Nsteps):
         
         if yrand >= 0 :
             r[walker, 1] += 1.0
-        else:
+        elif yrand < 0:
             r[walker, 1] -= 1.0
         
+
+        # Testing bounds and changing direction
+        if r[walker,0] < xmin:
+            r[walker,1] += 1
+            r[walker,0] +=1
+    
+        if r[walker,0] >= xmax:
+            r[walker,1] += 1
+            r[walker,0] -=1
+        
+        if r[walker,1] <= ymin:
+            r[walker,0] += 1
+            r[walker,1] +=1
+        
+        if r[walker,1] >= ymax:
+            r[walker,0] += 1
+            r[walker,1] -= 1
+        
+        # Checking Corners
+        if r[walker,1] >= ymax and r[walker,0] >= xmax:
+            r[walker,0] -= 1
+            r[walker,1]-=1
+        if r[walker,1] >= ymax and r[walker,0] <= xmin:
+            r[walker,1] -=1
+            r[walker,0] +=1
+        if r[walker,1] <=ymin and r[walker,0] >= xmax:
+            r[walker,1] += 1
+            r[walker,0] -= 1
+        if r[walker,1] <= ymin and r[walker,0] <= xmin:
+            r[walker,0] +=1
+            r[walker,1] +=1 
 
         
         
@@ -72,10 +98,7 @@ for t in range(Nsteps):
         if Pk > 0 :
             Sentropy[t] += -Pk * np.log2(Pk)
     
-    # Breaking when the first one makes it to a bound
-    if np.max(r[:, 0]) >= xmax or np.min(r[:,0]) <= xmin or np.max(r[:, 1]) >= ymax or np.min(r[:,1]) <= ymin:
-                
-        break  
+   
     
     # Creating the Scatterplot artists every 2 time steps
     
@@ -94,7 +117,7 @@ plt.show()
 # WalkerAnimation2.save('HW10_Problem4.mp4', writer = FFwriter)
 
 plt.figure()
-ScatterArtists[-1][-1]
+plt.scatter(r[:,0],r[:,1], marker = 's', c = 'b')
 
 plt.figure()
 plt.plot(np.arange(t),Sentropy[0:t])
